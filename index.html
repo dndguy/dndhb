@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character Manager</title>
+    <link
+    href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap"
+    rel="stylesheet">
+    <style>
+        :root {
+            --parchment-dark: #c8a96e;
+            --parchment-mid:  #e8d5a3;
+            --parchment-light:#f5ecd7;
+            --ink:            #2c1a0e;
+            --ink-faded:      #5c3d1e;
+            --ink-light:      #7a5230;
+            --blood-red:      #6b1a1a;
+            --border-worn:    #8b6340;
+        }
+
+        /* ── Page background ── */
+        body {
+            margin: 0;
+            padding: 30px 15px 60px;
+            min-height: 100vh;
+            background-color: #1a0f07;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, #2a1a0a 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, #0f0804 0%, transparent 60%);
+            font-family: 'IM Fell English', Georgia, serif;
+            color: var(--ink);
+        }
+
+        /* ── Scroll wrapper with torn top/bottom ── */
+        .scroll-wrap {
+            max-width: 820px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Torn top edge */
+        .scroll-wrap::before {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 55px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 55' preserveAspectRatio='none'%3E%3Cpath d='M0,55 C30,30 50,45 80,20 C100,5 120,35 150,15 C170,2 200,40 230,18 C255,0 275,38 310,22 C335,10 360,42 390,20 C415,2 440,44 470,25 C495,8 520,38 550,18 C575,3 600,40 630,22 C655,8 680,42 710,20 C735,4 760,38 800,15 L800,55 Z' fill='%23e8d5a3'/%3E%3C/svg%3E");
+            background-size: 100% 100%;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 -3px 6px rgba(0,0,0,0.5));
+        }
+
+        /* Torn bottom edge */
+        .scroll-wrap::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 55px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 55' preserveAspectRatio='none'%3E%3Cpath d='M0,0 C30,25 55,10 85,35 C105,50 130,15 160,38 C182,53 208,12 238,32 C260,48 285,8 315,30 C338,48 362,10 395,35 C418,52 445,8 475,28 C498,45 522,12 555,34 C578,50 605,10 635,30 C658,46 682,8 715,32 C738,50 765,12 800,38 L800,0 Z' fill='%23e8d5a3'/%3E%3C/svg%3E");
+            background-size: 100% 100%;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+        }
+
+        /* ── Main scroll body ── */
+        .container {
+    background-color: var(--parchment-mid);
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+        linear-gradient(to right, rgba(100,60,20,0.18) 0%, transparent 8%, transparent 92%, rgba(100,60,20,0.18) 100%),
+        repeating-linear-gradient(
+            180deg,
+            transparent,
+            transparent 28px,
+            rgba(180,130,70,0.07) 28px,
+            rgba(180,130,70,0.07) 30px
+        );
+
+    border-left: 12px solid var(--parchment-dark);
+    border-right: 12px solid var(--parchment-dark);
+
+    box-shadow:
+        inset 4px 0 18px rgba(100,60,10,0.25),
+        inset -4px 0 18px rgba(100,60,10,0.25),
+        0 0 60px rgba(0,0,0,0.8);
+
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    padding: 10px 0;
+
+
+
+            background-color: var(--parchment-mid);
+            background-image:
+                /* Noise/grain texture */
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+                /* Vertical vignette darkening edges */
+                linear-gradient(to right, rgba(100,60,20,0.18) 0%, transparent 8%, transparent 92%, rgba(100,60,20,0.18) 100%),
+                /* Subtle horizontal banding like old paper */
+                repeating-linear-gradient(
+                    180deg,
+                    transparent,
+                    transparent 28px,
+                    rgba(180,130,70,0.07) 28px,
+                    rgba(180,130,70,0.07) 30px
+                );
+            border-left:  12px solid var(--parchment-dark);
+            border-right: 12px solid var(--parchment-dark);
+            box-shadow:
+                inset 4px  0 18px rgba(100,60,10,0.25),
+                inset -4px 0 18px rgba(100,60,10,0.25),
+                0 0 60px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            padding: 10px 0 10px;
+        }
+
+        /* Aged stain blobs */
+        .container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(ellipse 120px 80px at 15% 25%, rgba(139,90,43,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 90px 60px  at 85% 70%, rgba(100,65,20,0.10) 0%, transparent 70%),
+                radial-gradient(ellipse 60px 100px at 70% 15%, rgba(160,110,50,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 80px 50px  at 30% 85%, rgba(120,80,30,0.09) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Tab Navigation ── */
+        .tab-menu {
+            display: flex;
+            background: transparent;
+            border-bottom: 3px double var(--border-worn);
+            position: relative;
+            z-index: 1;
+            padding: 0 20px;
+        }
+
+        .tab-menu button {
+            background: transparent;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 22px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            flex-grow: 1;
+            transition: all 0.3s;
+            color: var(--ink-faded);
+            text-transform: uppercase;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            position: relative;
+        }
+
+        .tab-menu button:hover {
+            color: var(--ink);
+            text-shadow: 0 0 8px rgba(139,90,43,0.4);
+        }
+
+        .tab-menu button.active {
+            color: var(--blood-red);
+            border-bottom: 3px solid var(--blood-red);
+            text-shadow: 0 1px 3px rgba(107,26,26,0.3);
+        }
+
+        /* ── Tab Content ── */
+        .tab-content { display: none; padding: 25px 30px; position: relative; z-index: 1; }
+        .tab-content.active { display: block; }
+
+        /* ── Headings ── */
+        h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--blood-red);
+            border-bottom: 1px solid var(--border-worn);
+            padding-bottom: 6px;
+            margin: 24px 0 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+        }
+
+        h2::before { content: '✦ '; font-size: 11px; opacity: 0.6; }
+        h2::after  { content: ' ✦'; font-size: 11px; opacity: 0.6; }
+
+        /* ── Grid ── */
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* ── Input groups ── */
+        .input-group { display: flex; flex-direction: column; }
+
+        .input-group label {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--ink-faded);
+            margin-bottom: 5px;
+        }
+
+        .input-group label .small-text {
+            font-family: 'IM Fell English', serif;
+            font-size: 10px;
+            font-weight: normal;
+            font-style: italic;
+            color: var(--ink-light);
+            margin-left: 4px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            padding: 7px 9px;
+            border: 1px solid var(--border-worn);
+            border-radius: 2px;
+            background-color: rgba(245,236,215,0.7);
+            font-family: 'IM Fell English', Georgia, serif;
+            font-size: 14px;
+            color: var(--ink);
+            box-sizing: border-box;
+            box-shadow: inset 1px 1px 4px rgba(100,60,10,0.15);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            background-color: rgba(255,248,230,0.9);
+            box-shadow: inset 1px 1px 4px rgba(100,60,10,0.2), 0 0 6px rgba(139,90,43,0.3);
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%235c3d1e'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+        }
+
+        textarea { resize: vertical; }
+
+        /* ── Form rows ── */
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .form-row > div { flex-grow: 1; }
+
+        /* ── Buttons ── */
+        .btn-add {
+            background: linear-gradient(180deg, #7a4a20 0%, #5c3010 100%);
+            color: #f5ecd7;
+            border: 1px solid #3a1e08;
+            padding: 9px 16px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 24px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,220,150,0.2);
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            background: linear-gradient(180deg, #8b5a2b 0%, #6b3a15 100%);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,220,150,0.25);
+        }
+
+        .btn-add:active { transform: translateY(1px); }
+
+        /* ── HP Box ── */
+        .hp-box {
+            border: 1px solid var(--border-worn);
+            background: rgba(245,236,215,0.5);
+            padding: 12px;
+            border-radius: 3px;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: inset 0 0 10px rgba(100,60,10,0.1);
+        }
+
+        .hp-header { display: flex; justify-content: space-between; align-items: center; }
+        .hp-header label { margin: 0; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faded); }
+        .max-hp-group { display: flex; align-items: center; gap: 6px; }
+        .max-hp-group label { font-size: 10px; font-weight: normal; margin: 0; }
+        .max-hp-group input { width: 60px; padding: 4px 6px; font-size: 13px; }
+
+        .hp-main input {
+            width: 100%;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            color: var(--blood-red);
+            font-family: 'Cinzel', serif;
+            background: rgba(245,236,215,0.8);
+            box-sizing: border-box;
+        }
+
+        .hp-controls { display: flex; gap: 6px; }
+        .hp-controls input { flex-grow: 1; text-align: center; font-weight: bold; font-size: 15px; }
+
+        .hp-controls button {
+            background: linear-gradient(180deg, #8b1a1a 0%, #5c1010 100%);
+            color: #f5ecd7;
+            border: 1px solid #3a0808;
+            border-radius: 2px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+        }
+
+        .hp-controls button:hover { background: linear-gradient(180deg, #a02020 0%, #6b1515 100%); }
+        .hp-controls .btn-heal { background: linear-gradient(180deg, #2e6b3a 0%, #1a4020 100%); border-color: #0f2812; }
+        .hp-controls .btn-heal:hover { background: linear-gradient(180deg, #3a8048 0%, #224d28 100%); }
+
+        /* ── Carry Weight Box ── */
+        .cw-box {
+            border: 1px solid var(--border-worn);
+            background: rgba(245,236,215,0.5);
+            border-radius: 3px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 10px rgba(100,60,10,0.1);
+        }
+
+        .cw-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .cw-header label { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faded); margin: 0; }
+        .max-cw-group { display: flex; align-items: center; gap: 6px; }
+        .max-cw-group label { font-size: 10px; font-weight: normal; margin: 0; }
+        .max-cw-group input { width: 80px; padding: 4px 6px; font-size: 12px; }
+
+        .cw-display {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            color: var(--blood-red);
+            padding: 6px 0;
+            font-family: 'Cinzel', serif;
+        }
+
+        .cw-display span {
+            font-family: 'IM Fell English', serif;
+            font-size: 12px;
+            font-weight: normal;
+            font-style: italic;
+            color: var(--ink-light);
+            display: block;
+        }
+
+        /* ── Inventory / Spell Cards ── */
+        .list-container { display: flex; flex-direction: column; gap: 10px; }
+
+        .card {
+            border: 1px solid var(--border-worn);
+            background: rgba(245,236,215,0.55);
+            padding: 14px 16px;
+            border-radius: 3px;
+            position: relative;
+            box-shadow: inset 0 0 8px rgba(100,60,10,0.08), 1px 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border: 1px solid rgba(139,99,64,0.2);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .card h4 {
+            margin: 0 0 5px 0;
+            color: var(--blood-red);
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            padding-right: 65px;
+        }
+
+        .card p { margin: 4px 0 0 0; font-size: 14px; font-style: italic; color: var(--ink-faded); }
+        .card .card-meta { font-size: 12px; color: var(--ink-light); margin-top: 4px; font-style: italic; }
+
+        .btn-delete {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(180deg, #8b1a1a 0%, #5c1010 100%);
+            color: #f5ecd7;
+            border: 1px solid #3a0808;
+            border-radius: 2px;
+            cursor: pointer;
+            padding: 4px 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .btn-delete:hover { background: linear-gradient(180deg, #a02020 0%, #6b1515 100%); }
+
+        /* ── Attribute Cards ── */
+        .attr-card {
+            border: 1px solid var(--border-worn);
+            background: rgba(245,236,215,0.55);
+            padding: 10px 8px;
+            border-radius: 3px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            text-align: center;
+            box-shadow: inset 0 0 8px rgba(100,60,10,0.08);
+        }
+
+        .attr-name-edit, .attr-val-edit {
+            border: 1px dashed transparent;
+            background: transparent;
+            text-align: center;
+            font-family: inherit;
+            transition: all 0.2s;
+            border-radius: 2px;
+            color: var(--ink);
+        }
+
+        .attr-name-edit {
+            font-family: 'Cinzel', serif;
+            color: var(--blood-red);
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 22px 4px 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .attr-val-edit {
+            font-size: 24px;
+            font-weight: bold;
+            padding: 4px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .attr-name-edit:hover, .attr-val-edit:hover,
+        .attr-name-edit:focus, .attr-val-edit:focus {
+            background: rgba(255,248,230,0.8);
+            border: 1px dashed var(--border-worn);
+            outline: none;
+        }
+
+        .btn-delete-small {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: linear-gradient(180deg, #8b1a1a 0%, #5c1010 100%);
+            color: #f5ecd7;
+            border: 1px solid #3a0808;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* ── Debuff Tags ── */
+        .debuffs-wrapper {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .debuff-tag {
+            background: linear-gradient(135deg, rgba(107,26,26,0.15), rgba(139,90,43,0.1));
+            color: var(--blood-red);
+            border: 1px solid rgba(107,26,26,0.4);
+            padding: 6px 10px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+        }
+
+        .debuff-counter {
+            display: flex;
+            align-items: center;
+            background: rgba(245,236,215,0.8);
+            border-radius: 2px;
+            padding: 2px 4px;
+            font-size: 12px;
+            border: 1px solid rgba(107,26,26,0.3);
+        }
+
+        .debuff-counter button {
+            background: none;
+            border: none;
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+            color: var(--blood-red);
+            font-weight: bold;
+            font-family: 'Cinzel', serif;
+        }
+
+        .debuff-counter button:hover { color: var(--ink); }
+
+        .debuff-counter span {
+            margin: 0 4px;
+            min-width: 16px;
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+        }
+
+        .btn-remove-debuff {
+            background: none;
+            border: none;
+            color: var(--blood-red);
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            font-size: 18px;
+            line-height: 1;
+            margin-left: 2px;
+            opacity: 0.7;
+        }
+
+        .btn-remove-debuff:hover { opacity: 1; }
+
+        /* ── Spell Level field ── */
+        #spellLevelGroup { display: none; }
+
+        /* ── Decorative divider ── */
+        .ornament {
+            text-align: center;
+            color: var(--border-worn);
+            font-size: 18px;
+            letter-spacing: 8px;
+            margin: 6px 0 2px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="scroll-wrap">
+    <div class="container">
+
+            <div class="form-row" style="padding:20px 30px 0; margin-bottom:10px;">
+    <div class="input-group" style="max-width:220px;">
+        <label>Character Name</label>
+        <input type="text" id="characterName" placeholder="e.g. Thorin">
+    </div>
+
+    <button class="btn-add"
+            style="margin-top:24px;"
+            onclick="exportCharacter()">
+        Export JSON
+    </button>
+
+    <button class="btn-add"
+            style="margin-top:24px;"
+            onclick="document.getElementById('importCharacterFile').click()">
+        Import JSON
+    </button>
+
+    <input
+        type="file"
+        id="importCharacterFile"
+        accept=".json,application/json"
+        style="display:none"
+        onchange="importCharacter(event)">
+</div>
+
+        <div class="ornament">— ✦ ⚔ ✦ —</div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-menu">
+            <button class="tab-link active" onclick="openTab(event, 'Stats')">Character Stats</button>
+            <button class="tab-link" onclick="openTab(event, 'Inventory')">Inventory</button>
+            <button class="tab-link" onclick="openTab(event, 'Spells')">Spells & Abilities</button>
+        </div>
+
+        <!-- ══════ STATS TAB ══════ -->
+        <div id="Stats" class="tab-content active">
+
+    <h2>Character Description</h2>
+
+    <div class="input-group" style="margin-bottom:20px;">
+        <label>Description / Notes</label>
+        <textarea
+            id="characterDescription"
+            rows="8"
+            placeholder="Appearance, personality, backstory, goals, important notes, etc."
+            style="width:100%; min-height:180px;">
+        </textarea>
+    </div>
+
+    <h2>Basic Info</h2>
+            <div class="grid-stats">
+                <div class="input-group">
+                    <label>Level</label>
+                    <input type="text" placeholder="e.g. 1">
+                </div>
+                <div class="input-group">
+                    <label>Class</label>
+                    <input type="text" placeholder="e.g. Fighter">
+                </div>
+                <div class="input-group">
+                    <label>Race</label>
+                    <input type="text" placeholder="e.g. Dwarf">
+                </div>
+                <div class="input-group">
+                    <label>Alignment</label>
+                    <input type="text" placeholder="e.g. Neutral Good">
+                </div>
+            </div>
+
+          <h2>Health & Status</h2>
+<div class="form-row" style="margin-bottom: 10px;">
+    <div class="hp-box" style="flex-grow: 0;">
+        <div class="hp-header">
+            <label>Current HP</label>
+            <div class="max-hp-group">
+                <label>Max</label>
+                <input type="number" id="maxHp" placeholder="0">
+            </div>
+        </div>
+        <div class="hp-main">
+            <input type="number" id="currentHp" value="10">
+        </div>
+        <div class="hp-controls">
+            <button onclick="modifyHp(-1)" title="Take Damage">−</button>
+            <input type="number" id="hpChange" value="1" min="1">
+            <button class="btn-heal" onclick="modifyHp(1)" title="Heal">+</button>
+        </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px; min-width:220px; flex-grow:1;">
+        <div class="input-group">
+            <label>Add Debuff / Condition <span class="small-text">(TB — Turn Bases)</span></label>
+            <input type="text" id="debuffName" placeholder="e.g. Poisoned, Restrained">
+        </div>
+
+        <div class="input-group" style="max-width:90px;">
+            <label>TB</label>
+            <input type="number" id="debuffRounds" placeholder="3">
+        </div>
+
+        <button class="btn-add" onclick="addDebuff()" style="margin-top:0; align-self:flex-start;">Add</button>
+    </div>
+</div>
+
+<div class="debuffs-wrapper" id="debuffsList"></div>
+
+
+            <h2>Attributes</h2>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Attribute Name</label>
+                    <input type="text" id="attrName" placeholder="e.g. Strength, Armor Class">
+                </div>
+                <div class="input-group">
+                    <label>Value</label>
+                    <input type="text" id="attrValue" placeholder="e.g. 16">
+                </div>
+                <button class="btn-add" onclick="addAttribute()">Add Attribute</button>
+            </div>
+            <div class="grid-stats" id="attributesList"></div>
+        </div>
+
+        <!-- ══════ INVENTORY TAB ══════ -->
+        <div id="Inventory" class="tab-content">
+            <h2>Add Item</h2>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Item Name</label>
+                    <input type="text" id="itemName" placeholder="e.g. Longsword">
+                </div>
+                <div class="input-group" style="max-width: 75px;">
+                    <label>Qty</label>
+                    <input type="number" id="itemQty" value="1" min="1">
+                </div>
+                <div class="input-group" style="max-width: 95px;">
+                    <label>CW (lbs)</label>
+                    <input type="number" id="itemCW" placeholder="0" min="0" step="0.1">
+                </div>
+                <div class="input-group" style="flex-grow: 3;">
+                    <label>Description (Optional)</label>
+                    <input type="text" id="itemDesc" placeholder="e.g. 1d8 slashing damage">
+                </div>
+                <button class="btn-add" onclick="addItem()">Add</button>
+            </div>
+
+            <!-- Carry Weight Box -->
+            <div class="cw-box">
+                <div class="cw-header">
+                    <label>Carry Weight</label>
+                    <div class="max-cw-group">
+                        <label>Max CW (lbs)</label>
+                        <input type="number" id="maxCW" placeholder="e.g. 150" min="0" oninput="recalcCW()">
+                    </div>
+                </div>
+                <div class="cw-display" id="cwDisplay">
+                    0 lbs
+                    <span>Total carry weight of all items</span>
+                </div>
+            </div>
+
+            <h2>Backpack</h2>
+            <div class="list-container" id="inventoryList"></div>
+        </div>
+
+        <!-- ══════ SPELLS TAB ══════ -->
+        <div id="Spells" class="tab-content">
+            <h2>Add Spell / Ability</h2>
+<div class="form-row">
+    <div class="input-group">
+        <label>Name</label>
+        <input type="text" id="spellName" placeholder="e.g. Fireball">
+    </div>
+    <div class="input-group">
+        <label>Type</label>
+        <select id="spellType" onchange="toggleSpellLevel()">
+            <option value="Cantrip">Cantrip</option>
+            <option value="Spell (Leveled)">Spell (Leveled)</option>
+            <option value="Action">Action</option>
+            <option value="Bonus Action">Bonus Action</option>
+            <option value="Passive">Passive Ability</option>
+        </select>
+    </div>
+    <div class="input-group" id="spellLevelGroup" style="max-width: 120px;">
+        <label>Spell Level</label>
+        <input type="text" id="spellLevel" placeholder="e.g. 3">
+    </div>
+</div>
+<div class="form-row">
+    <div class="input-group" style="flex-grow: 1;">
+        <label>Description / Mechanics</label>
+        <textarea id="spellDesc" rows="2" placeholder="Casting time, range, damage, etc."></textarea>
+    </div>
+    <button class="btn-add" style="margin-top: 24px;" onclick="addSpell()">Add</button>
+</div>
+
+
+            <h2>Known Spells & Abilities</h2>
+            <div class="list-container" id="spellsList"></div>
+        </div>
+
+        <div class="ornament" style="margin-top: 10px;">— ✦ ⚔ ✦ —</div>
+
+    </div><!-- .container -->
+</div><!-- .scroll-wrap -->
+
+<script>
+
+    element.textContent = name;
+
+    function saveCharacter() {
+    const data = getCharacterData();
+    localStorage.setItem(
+        'dndCharacterManagerSave',
+        JSON.stringify(data)
+    );
+}
+
+    function loadCharacter() {
+    const saved = localStorage.getItem('dndCharacterManagerSave');
+
+    if (!saved) return;
+
+    try {
+        const data = JSON.parse(saved);
+
+        clearCharacterUI();
+
+        document.getElementById('characterName').value =
+            data.characterName || '';
+
+        document.getElementById('characterDescription').value =
+            data.description || '';
+
+        const statInputs =
+            document.querySelectorAll('#Stats .grid-stats input');
+
+        if (statInputs[0]) statInputs[0].value = data.basicInfo?.Level || '';
+        if (statInputs[1]) statInputs[1].value = data.basicInfo?.class || '';
+        if (statInputs[2]) statInputs[2].value = data.basicInfo?.race || '';
+        if (statInputs[3]) statInputs[3].value = data.basicInfo?.alignment || '';
+
+        document.getElementById('currentHp').value =
+            data.hp?.current || '';
+
+        document.getElementById('maxHp').value =
+            data.hp?.max || '';
+
+        document.getElementById('maxCW').value =
+            data.carryWeight?.max || '';
+
+        (data.debuffs || []).forEach(d =>
+            addDebuffFromData(d.name, d.tb)
+        );
+
+        (data.attributes || []).forEach(a =>
+            addAttributeFromData(a.name, a.value)
+        );
+
+        (data.inventory || []).forEach(i =>
+            addItemFromData(i.name, i.qty, i.cw, i.desc)
+        );
+
+        (data.spells || []).forEach(s =>
+            addSpellFromData(s.name, s.type, s.level, s.desc)
+        );
+
+        recalcCW();
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+    function importCharacter(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            clearCharacterUI();
+
+            document.getElementById('characterName').value = data.characterName || '';
+            document.getElementById('characterDescription').value =
+                data.description || '';
+
+            const statInputs = document.querySelectorAll('#Stats .grid-stats input');
+            if (statInputs[0]) statInputs[0].value = data.basicInfo?.Level || '';
+            if (statInputs[1]) statInputs[1].value = data.basicInfo?.class || '';
+            if (statInputs[2]) statInputs[2].value = data.basicInfo?.race || '';
+            if (statInputs[3]) statInputs[3].value = data.basicInfo?.alignment || '';
+
+            document.getElementById('currentHp').value = data.hp?.current || '';
+            document.getElementById('maxHp').value = data.hp?.max || '';
+            document.getElementById('maxCW').value = data.carryWeight?.max || '';
+
+            (data.debuffs || []).forEach(debuff => {
+                addDebuffFromData(debuff.name, debuff.tb);
+            });
+
+            (data.attributes || []).forEach(attr => {
+                addAttributeFromData(attr.name, attr.value);
+            });
+
+            (data.inventory || []).forEach(item => {
+                addItemFromData(item.name, item.qty, item.cw, item.desc);
+            });
+
+            (data.spells || []).forEach(spell => {
+                addSpellFromData(spell.name, spell.type, spell.level, spell.desc);
+            });
+
+            recalcCW();
+        } catch (err) {
+            alert('Invalid JSON file.');
+            console.error(err);
+        }
+    };
+
+    reader.readAsText(file);
+
+    event.target.value = '';
+    saveCharacter();
+}
+
+
+    function clearCharacterUI() {
+    document.getElementById('characterName').value = '';
+    document.getElementById('characterDescription').value = '';
+
+    const statInputs = document.querySelectorAll('#Stats .grid-stats input');
+    statInputs.forEach(input => input.value = '');
+
+    document.getElementById('currentHp').value = '';
+    document.getElementById('maxHp').value = '';
+    document.getElementById('maxCW').value = '';
+
+    document.getElementById('attributesList').innerHTML = '';
+    document.getElementById('debuffsList').innerHTML = '';
+    document.getElementById('inventoryList').innerHTML = '';
+    document.getElementById('spellsList').innerHTML = '';
+
+    recalcCW();
+}
+
+
+    function exportCharacter() {
+    const data = getCharacterData();
+    const json = JSON.stringify(data, null, 2);
+
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const fileNameBase =
+        (data.characterName || data.basicInfo.charName || 'character')
+            .trim()
+            .replace(/[^a-z0-9_\-]+/gi, '_');
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileNameBase || 'character'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+}
+
+
+        function getCharacterData() {
+    const attributes = [];
+    document.querySelectorAll('#attributesList .attr-card').forEach(card => {
+        attributes.push({
+            name: card.querySelector('.attr-name-edit')?.value || '',
+            value: card.querySelector('.attr-val-edit')?.value || ''
+        });
+    });
+
+    const debuffs = [];
+    document.querySelectorAll('#debuffsList .debuff-tag').forEach(tag => {
+        const roundEl = tag.querySelector('.round-val');
+        const removeBtn = tag.querySelector('.btn-remove-debuff');
+
+        let name = tag.childNodes[0]?.textContent?.trim() || '';
+        if (!name && removeBtn) {
+            name = tag.textContent.replace(removeBtn.textContent, '').trim();
+        }
+
+        debuffs.push({
+            name,
+            tb: roundEl ? parseInt(roundEl.textContent) : null
+        });
+    });
+
+    const inventory = [];
+    document.querySelectorAll('#inventoryList .card').forEach(card => {
+        const title = card.querySelector('h4')?.childNodes[0]?.textContent?.trim() || '';
+        const desc = card.querySelector('p:not(.card-meta)')?.textContent?.trim() || '';
+        inventory.push({
+            name: title,
+            qty: parseFloat(card.dataset.qty) || 1,
+            cw: parseFloat(card.dataset.cw) || 0,
+            desc
+        });
+    });
+
+    const spells = [];
+    document.querySelectorAll('#spellsList .card').forEach(card => {
+        const header = card.querySelector('h4')?.textContent || '';
+        const desc = card.querySelector('p')?.textContent?.trim() || '';
+
+        let name = header.split('[')[0].trim();
+        let type = '';
+        let level = '';
+
+        const bracketMatch = header.match(/\[(.*?)\]/);
+        if (bracketMatch) {
+            const inside = bracketMatch[1];
+            if (inside.includes('— Level')) {
+                const parts = inside.split('— Level');
+                type = parts[0].trim();
+                level = parts[1].trim();
+            } else {
+                type = inside.trim();
+            }
+        }
+
+        spells.push({
+            name,
+            type,
+            level,
+            desc
+        });
+    });
+
+    return {
+        characterName: document.getElementById('characterName')?.value || '',
+        description: document.getElementById('characterDescription')?.value || '',
+
+        basicInfo: {
+            Level: document.querySelectorAll('#Stats .grid-stats input')[0]?.value || '',
+            class: document.querySelectorAll('#Stats .grid-stats input')[1]?.value || '',
+            race: document.querySelectorAll('#Stats .grid-stats input')[2]?.value || '',
+            alignment: document.querySelectorAll('#Stats .grid-stats input')[3]?.value || ''
+        },
+        hp: {
+            current: document.getElementById('currentHp')?.value || '',
+            max: document.getElementById('maxHp')?.value || ''
+        },
+        carryWeight: {
+            max: document.getElementById('maxCW')?.value || ''
+        },
+        debuffs,
+        attributes,
+        inventory,
+        spells
+    };
+}
+
+
+        function addAttributeFromData(name, value) {
+    const card = document.createElement('div');
+    card.className = 'attr-card';
+    card.innerHTML = `
+        <input type="text" class="attr-name-edit" value="${name || ''}">
+        <input type="text" class="attr-val-edit" value="${value || ''}">
+        <button class="btn-delete-small"
+            onclick="if(confirm('Remove this attribute from the scroll?')) this.parentElement.remove();"
+            title="Remove">×</button>`;
+    document.getElementById('attributesList').appendChild(card);
+}
+
+function addDebuffFromData(name, tb) {
+    const tag = document.createElement('div');
+    tag.className = 'debuff-tag';
+
+    let counterHtml = '';
+    if (tb !== null && tb !== undefined && tb !== '') {
+        counterHtml = `
+            <div class="debuff-counter">
+                <button onclick="updateRounds(this, -1)" title="Decrease TB">−</button>
+                <span class="round-val">${tb}</span>
+                <button onclick="updateRounds(this, 1)" title="Increase TB">+</button>
+            </div>`;
+    }
+
+    tag.innerHTML = `${name || ''}${counterHtml}
+        <button class="btn-remove-debuff" onclick="this.parentElement.remove()" saveCharacter(); title="Remove">×</button>`;
+
+    document.getElementById('debuffsList').appendChild(tag);
+}
+
+function addItemFromData(name, qty, cw, desc) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.qty = qty || 1;
+    card.dataset.cw = cw || 0;
+
+    const totalItemCW = Math.round(((parseFloat(cw) || 0) * (parseFloat(qty) || 1)) * 10) / 10;
+
+    card.innerHTML = `
+        <h4>${name || ''} <span style="font-weight:normal;font-size:12px;">(×${qty || 1})</span></h4>
+        ${desc ? `<p>${desc}</p>` : ''}
+        <p class="card-meta">CW: ${cw || 0} lbs each — Total: ${totalItemCW} lbs</p>
+        <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
+
+    document.getElementById('inventoryList').appendChild(card);
+}
+
+function addSpellFromData(name, type, level, desc) {
+    const levelTag = (type === 'Spell (Leveled)' && level) ? ` — Level ${level}` : '';
+    saveCharacter();
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+        <h4>${name || ''} <em style="font-weight:normal;font-size:12px;">[${type || 'Ability'}${levelTag}]</em></h4>
+        ${desc ? `<p>${desc}</p>` : ''}
+        <button class="btn-delete" onclick="this.closest('.card').remove()">Remove</button>`;
+        saveCharacter();
+
+    document.getElementById('spellsList').appendChild(card);
+}
+
+    // ── Tab Switching ──
+    function openTab(evt, tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-link').forEach(el => {
+            el.classList.remove('active');
+        });
+        document.getElementById(tabName).style.display = 'block';
+        document.getElementById(tabName).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // ── HP Logic ──
+    function modifyHp(multiplier) {
+        const currentHpInput = document.getElementById('currentHp');
+        const changeInput    = document.getElementById('hpChange');
+        let currentHp    = parseInt(currentHpInput.value) || 0;
+        let changeAmount = parseInt(changeInput.value)    || 0;
+        currentHpInput.value = currentHp + (changeAmount * multiplier);
+        saveCharacter();
+    }
+
+    // ── Debuff Logic ──
+    function updateRounds(button, amount) {
+        const span = button.parentElement.querySelector('.round-val');
+        let newRounds = parseInt(span.innerText) + amount;
+        if (newRounds <= 0) {
+            button.closest('.debuff-tag').remove();
+        } else {
+            span.innerText = newRounds;
+        }
+        saveCharacter();
+    }
+
+    function addDebuff() {
+        const name   = document.getElementById('debuffName').value.trim();
+        const rounds = document.getElementById('debuffRounds').value;
+        if (!name) { alert("Please enter a condition or debuff."); return; }
+        saveCharacter();
+
+        const tag = document.createElement('div');
+        tag.className = 'debuff-tag';
+
+        let counterHtml = '';
+        if (rounds !== '') {
+            counterHtml = `
+                <div class="debuff-counter">
+                    <button onclick="updateRounds(this, -1)" title="Decrease TB">−</button>
+                    <span class="round-val">${rounds}</span>
+                    <button onclick="updateRounds(this, 1)" title="Increase TB">+</button>
+                </div>`;
+        }
+
+        tag.innerHTML = `${name}${counterHtml}
+            <button class="btn-remove-debuff" onclick="this.parentElement.remove()" title="Remove">×</button>`;
+
+        document.getElementById('debuffsList').appendChild(tag);
+        document.getElementById('debuffName').value  = '';
+        document.getElementById('debuffRounds').value = '';
+    }
+
+    // ── Attribute Logic ──
+    function addAttribute() {
+        const name  = document.getElementById('attrName').value.trim();
+        const value = document.getElementById('attrValue').value;
+        if (!name) { alert("Please enter an attribute name."); return; }
+
+        const card = document.createElement('div');
+        card.className = 'attr-card';
+        card.innerHTML = `
+            <input type="text" class="attr-name-edit" value="${name}">
+            <input type="text" class="attr-val-edit"  value="${value}">
+            <button class="btn-delete-small"
+                onclick="if(confirm('Remove this attribute from the scroll?')) this.parentElement.remove();"saveCharacter();
+                title="Remove">×</button>`;
+
+        document.getElementById('attributesList').appendChild(card);
+        document.getElementById('attrName').value  = '';
+        document.getElementById('attrValue').value = '';
+        document.getElementById('attrName').focus();
+        saveCharacter();
+    }
+
+    // ── Carry Weight Logic ──
+    function recalcCW() {
+        let total = 0;
+        document.querySelectorAll('#inventoryList .card').forEach(card => {
+            const qty = parseFloat(card.dataset.qty) || 1;
+            const cw  = parseFloat(card.dataset.cw)  || 0;
+            total += cw * qty;
+        });
+        total = Math.round(total * 10) / 10;
+
+        const maxCW   = parseFloat(document.getElementById('maxCW').value) || 0;
+        const display = document.getElementById('cwDisplay');
+
+        let label = `${total} lbs`;
+        if (maxCW > 0) {
+            const pct = Math.round((total / maxCW) * 100);
+            label += ` / ${maxCW} lbs <em style="font-size:12px;font-weight:normal;font-style:italic;color:var(--ink-light);">(${pct}%)</em>`;
+            display.style.color = total > maxCW ? '#8b1a1a' : 'var(--blood-red)';
+        } else {
+            display.style.color = 'var(--blood-red)';
+        }
+
+        display.innerHTML = `${label}<span>Total carry weight of all items</span>`;
+    }
+
+    // ── Inventory Item Logic ──
+    function addItem() {
+        const name = document.getElementById('itemName').value.trim();
+        const qty  = parseFloat(document.getElementById('itemQty').value) || 1;
+        const cw   = parseFloat(document.getElementById('itemCW').value)  || 0;
+        const desc = document.getElementById('itemDesc').value.trim();
+        if (!name) { alert("Please enter an item name."); return; }
+
+        const card = document.createElement('div');
+        card.className   = 'card';
+        card.dataset.qty = qty;
+        card.dataset.cw  = cw;
+
+        const totalItemCW = Math.round(cw * qty * 10) / 10;
+        card.innerHTML = `
+            <h4>${name} <span style="font-weight:normal;font-size:12px;">(×${qty})</span></h4>
+            ${desc ? `<p>${desc}</p>` : ''}
+            <p class="card-meta">CW: ${cw} lbs each — Total: ${totalItemCW} lbs</p>
+            <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
+
+        document.getElementById('inventoryList').appendChild(card);
+        recalcCW();
+
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemQty').value  = '1';
+        document.getElementById('itemCW').value   = '';
+        document.getElementById('itemDesc').value = '';
+        saveCharacter();
+    }
+
+    function removeItem(button) {
+        button.closest('.card').remove();
+        recalcCW();
+        saveCharacter();
+    }
+
+    // ── Spell Level Toggle ──
+    function toggleSpellLevel() {
+        const type  = document.getElementById('spellType').value;
+        const group = document.getElementById('spellLevelGroup');
+        group.style.display = (type === 'Spell (Leveled)') ? 'flex' : 'none';
+    }
+
+    // ── Spell / Ability Logic ──
+    function addSpell() {
+    const name = document.getElementById('spellName').value.trim();
+    const type = document.getElementById('spellType').value;
+    const desc = document.getElementById('spellDesc').value.trim();
+    const level = document.getElementById('spellLevel').value.trim();
+    if (!name) {
+        alert("Please enter a spell or ability name.");
+        return;
+    }
+    let levelTag = '';
+    if (type === 'Spell (Leveled)' && level !== '') {
+        levelTag = ` — Level ${level}`;
+    }
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+        <h4>${name} <em style="font-weight:normal;font-size:12px;">[${type}${levelTag}]</em></h4>
+        ${desc ? `<p>${desc}</p>` : ''}
+        <button class="btn-delete" onclick="this.closest('.card').remove()">Remove</button>
+    `;
+    document.getElementById('spellsList').appendChild(card);
+    document.getElementById('spellName').value = '';
+    document.getElementById('spellDesc').value = '';
+    document.getElementById('spellLevel').value = '';
+    saveCharacter();
+}
+
+    window.addEventListener('DOMContentLoaded', loadCharacter);
+    document.addEventListener('input', saveCharacter);
+</script>
+
+</body>
+</html>
