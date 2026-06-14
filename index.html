@@ -722,6 +722,9 @@
                 <button class="btn-add" onclick="addAttribute()">Add Attribute</button>
             </div>
             <div class="grid-stats" id="attributesList"></div>
+
+            <h2>Equipment</h2>
+            <div class="list-container" id="equipmentList"></div>
         </div>
 
         <!-- ══════ INVENTORY TAB ══════ -->
@@ -743,6 +746,10 @@
                 <div class="input-group" style="flex-grow: 3;">
                     <label>Description (Optional)</label>
                     <input type="text" id="itemDesc" placeholder="e.g. 1d8 slashing damage">
+                </div>
+                <div class="input-group" style="max-width:120px;">
+                    <label>Equipable</label>
+                    <input type="checkbox" id="itemEquipable" style="margin-top:10px;">
                 </div>
                 <button class="btn-add" onclick="addItem()">Add</button>
             </div>
@@ -856,7 +863,7 @@
         );
 
         (data.inventory || []).forEach(i =>
-            addItemFromData(i.name, i.qty, i.cw, i.desc)
+            addItemFromData(i.name, i.qty, i.cw, i.desc, i.equipable, i.equipped)
         );
 
         (data.spells || []).forEach(s =>
@@ -904,7 +911,7 @@
             });
 
             (data.inventory || []).forEach(item => {
-                addItemFromData(item.name, item.qty, item.cw, item.desc);
+                addItemFromData(item.name, item.qty, item.cw, item.desc, item.equipable, item.equipped);
             });
 
             (data.spells || []).forEach(spell => {
@@ -940,6 +947,7 @@
     document.getElementById('attributesList').innerHTML = '';
     document.getElementById('debuffsList').innerHTML = '';
     document.getElementById('inventoryList').innerHTML = '';
+    document.getElementById('equipmentList').innerHTML = '';
     document.getElementById('spellsList').innerHTML = '';
 
     recalcCW();
@@ -1003,7 +1011,8 @@
             name: title,
             qty: parseFloat(card.dataset.qty) || 1,
             cw: parseFloat(card.dataset.cw) || 0,
-            desc
+            desc,
+            equipable: card.dataset.equipable === 'true'
         });
     });
 
@@ -1032,7 +1041,8 @@
             name,
             type,
             level,
-            desc
+            desc,
+            equipable: card.dataset.equipable === 'true'
         });
     });
 
@@ -1120,11 +1130,13 @@ function updateItemQuantity(input) {
     saveCharacter();
 }
 
-function addItemFromData(name, qty, cw, desc) {
+function addItemFromData(name, qty, cw, desc, equipable=false, equipped=false) {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.qty = qty || 1;
     card.dataset.cw = cw || 0;
+    card.dataset.equipable = equipable;
+    card.dataset.equipped = equipped;
 
     const totalItemCW = Math.round(((parseFloat(cw) || 0) * (parseFloat(qty) || 1)) * 10) / 10;
 
@@ -1134,9 +1146,11 @@ function addItemFromData(name, qty, cw, desc) {
         <input type="number" min="1" value="${qty || 1}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
         ${desc ? `<p>${desc}</p>` : ''}
         <p class="card-meta">CW: ${cw || 0} lbs each — Total: ${totalItemCW} lbs</p>
+        ${equipable ? `<button class="btn-delete" style="right:90px;background:linear-gradient(180deg,#2e6b3a 0%,#1a4020 100%);" onclick="toggleEquip(this)">${equipped ? 'Unequip':'Equip'}</button>` : ''}
         <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
 
     document.getElementById('inventoryList').appendChild(card);
+    if(equipped) updateEquipment();
 }
 
 function addSpellFromData(name, type, level, desc) {
@@ -1285,12 +1299,15 @@ document.getElementById('debuffsList').appendChild(tag);
         const qty  = parseFloat(document.getElementById('itemQty').value) || 1;
         const cw   = parseFloat(document.getElementById('itemCW').value)  || 0;
         const desc = document.getElementById('itemDesc').value.trim();
+        const equipable = document.getElementById('itemEquipable').checked;
         if (!name) { alert("Please enter an item name."); return; }
 
         const card = document.createElement('div');
         card.className   = 'card';
         card.dataset.qty = qty;
         card.dataset.cw  = cw;
+        card.dataset.equipable = equipable;
+        card.dataset.equipped = false;
 
         const totalItemCW = Math.round(cw * qty * 10) / 10;
         card.innerHTML = `
@@ -1299,6 +1316,7 @@ document.getElementById('debuffsList').appendChild(tag);
             <input type="number" min="1" value="${qty}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
             ${desc ? `<p>${desc}</p>` : ''}
             <p class="card-meta">CW: ${cw} lbs each — Total: ${totalItemCW} lbs</p>
+            ${equipable ? `<button class="btn-delete" style="right:90px;background:linear-gradient(180deg,#2e6b3a 0%,#1a4020 100%);" onclick="toggleEquip(this)">Equip</button>` : ''}
             <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
 
         document.getElementById('inventoryList').appendChild(card);
@@ -1308,6 +1326,7 @@ document.getElementById('debuffsList').appendChild(tag);
         document.getElementById('itemQty').value  = '1';
         document.getElementById('itemCW').value   = '';
         document.getElementById('itemDesc').value = '';
+        document.getElementById('itemEquipable').checked = false;
     }
 
     function removeItem(button) {
@@ -1383,7 +1402,31 @@ function removeSpell(button) {
 }
 
 
-    window.addEventListener('DOMContentLoaded', loadCharacter);
+    
+function toggleEquip(button){
+    const card = button.closest('.card');
+    const equipped = card.dataset.equipped === 'true';
+    card.dataset.equipped = (!equipped).toString();
+    button.textContent = equipped ? 'Equip' : 'Unequip';
+    updateEquipment();
+    saveCharacter();
+}
+
+function updateEquipment(){
+    const list = document.getElementById('equipmentList');
+    list.innerHTML = '';
+    document.querySelectorAll('#inventoryList .card').forEach(card=>{
+        if(card.dataset.equipped === 'true'){
+            const div = document.createElement('div');
+            div.className='card';
+            div.innerHTML='<h4>'+ (card.querySelector('h4').childNodes[0].textContent.trim()) +'</h4>' +
+            (card.querySelector('p:not(.card-meta)')?.outerHTML || '');
+            list.appendChild(div);
+        }
+    });
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{loadCharacter();updateEquipment();});
     document.addEventListener('input', saveCharacter);
 </script>
 
