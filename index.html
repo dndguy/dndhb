@@ -1094,6 +1094,27 @@ function addDebuffFromData(name, tb) {
     document.getElementById('debuffsList').appendChild(tag);
 }
 
+function updateItemQuantity(input) {
+    const card = input.closest('.card');
+    let qty = parseFloat(input.value) || 1;
+    if (qty < 1) qty = 1;
+    input.value = qty;
+
+    card.dataset.qty = qty;
+
+    const cw = parseFloat(card.dataset.cw) || 0;
+    const totalItemCW = Math.round(cw * qty * 10) / 10;
+
+    const qtyLabel = card.querySelector('.item-qty-label');
+    if (qtyLabel) qtyLabel.textContent = `(×${qty})`;
+
+    const meta = card.querySelector('.card-meta');
+    if (meta) meta.textContent = `CW: ${cw} lbs each — Total: ${totalItemCW} lbs`;
+
+    recalcCW();
+    saveCharacter();
+}
+
 function addItemFromData(name, qty, cw, desc) {
     const card = document.createElement('div');
     card.className = 'card';
@@ -1103,7 +1124,9 @@ function addItemFromData(name, qty, cw, desc) {
     const totalItemCW = Math.round(((parseFloat(cw) || 0) * (parseFloat(qty) || 1)) * 10) / 10;
 
     card.innerHTML = `
-        <h4>${name || ''} <span style="font-weight:normal;font-size:12px;">(×${qty || 1})</span></h4>
+        <h4>${name || ''} <span class="item-qty-label" style="font-weight:normal;font-size:12px;">(×${qty || 1})</span></h4>
+        <div style="margin:6px 0;"><label style="font-size:12px;">Qty:
+        <input type="number" min="1" value="${qty || 1}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
         ${desc ? `<p>${desc}</p>` : ''}
         <p class="card-meta">CW: ${cw || 0} lbs each — Total: ${totalItemCW} lbs</p>
         <button class="btn-delete" onclick="removeItem(this); saveCharacter();">Remove</button>`;
@@ -1261,7 +1284,9 @@ document.getElementById('debuffsList').appendChild(tag);
 
         const totalItemCW = Math.round(cw * qty * 10) / 10;
         card.innerHTML = `
-            <h4>${name} <span style="font-weight:normal;font-size:12px;">(×${qty})</span></h4>
+            <h4>${name} <span class="item-qty-label" style="font-weight:normal;font-size:12px;">(×${qty})</span></h4>
+            <div style="margin:6px 0;"><label style="font-size:12px;">Qty:
+            <input type="number" min="1" value="${qty}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
             ${desc ? `<p>${desc}</p>` : ''}
             <p class="card-meta">CW: ${cw} lbs each — Total: ${totalItemCW} lbs</p>
             <button class="btn-delete" onclick="removeItem(this); saveCharacter();">Remove</button>`;
