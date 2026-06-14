@@ -1129,7 +1129,7 @@ function addItemFromData(name, qty, cw, desc) {
         <input type="number" min="1" value="${qty || 1}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
         ${desc ? `<p>${desc}</p>` : ''}
         <p class="card-meta">CW: ${cw || 0} lbs each — Total: ${totalItemCW} lbs</p>
-        <button class="btn-delete" onclick="removeItem(this); saveCharacter();">Remove</button>`;
+        <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
 
     document.getElementById('inventoryList').appendChild(card);
 }
@@ -1138,10 +1138,15 @@ function addSpellFromData(name, type, level, desc) {
     const levelTag = (type === 'Spell (Leveled)' && level) ? ` — Level ${level}` : '';
     const card = document.createElement('div');
     card.className = 'card';
+    card.dataset.name = name || '';
+    card.dataset.type = type || '';
+    card.dataset.level = level || '';
+    card.dataset.desc = desc || '';
     card.innerHTML = `
         <h4>${name || ''} <em style="font-weight:normal;font-size:12px;">[${type || 'Ability'}${levelTag}]</em></h4>
         ${desc ? `<p>${desc}</p>` : ''}
-        <button class="btn-delete" onclick="this.closest('.card').remove(); saveCharacter();">Remove</button>`;
+        <button class="btn-delete" style="right:80px;background:linear-gradient(180deg,#2e5a8b 0%,#1a355c 100%);" onclick="editSpell(this)">Edit</button>
+        <button class="btn-delete" onclick="removeSpell(this)">Remove</button>`;
 
     document.getElementById('spellsList').appendChild(card);
      saveCharacter();
@@ -1289,7 +1294,7 @@ document.getElementById('debuffsList').appendChild(tag);
             <input type="number" min="1" value="${qty}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
             ${desc ? `<p>${desc}</p>` : ''}
             <p class="card-meta">CW: ${cw} lbs each — Total: ${totalItemCW} lbs</p>
-            <button class="btn-delete" onclick="removeItem(this); saveCharacter();">Remove</button>`;
+            <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
 
         document.getElementById('inventoryList').appendChild(card);
         recalcCW(); saveCharacter();
@@ -1301,10 +1306,12 @@ document.getElementById('debuffsList').appendChild(tag);
     }
 
     function removeItem(button) {
-        button.closest('.card').remove();
-        recalcCW();
-        saveCharacter();
-    }
+    if (!confirm('Delete this item from the backpack?')) return;
+
+    button.closest('.card').remove();
+    recalcCW();
+    saveCharacter();
+}
 
     // ── Spell Level Toggle ──
     function toggleSpellLevel() {
@@ -1329,10 +1336,15 @@ document.getElementById('debuffsList').appendChild(tag);
     }
     const card = document.createElement('div');
     card.className = 'card';
+    card.dataset.name = name || '';
+    card.dataset.type = type || '';
+    card.dataset.level = level || '';
+    card.dataset.desc = desc || '';
     card.innerHTML = `
         <h4>${name} <em style="font-weight:normal;font-size:12px;">[${type}${levelTag}]</em></h4>
         ${desc ? `<p>${desc}</p>` : ''}
-        <button class="btn-delete" onclick="this.closest('.card').remove(); saveCharacter();">Remove</button>
+        <button class="btn-delete" style="right:80px;background:linear-gradient(180deg,#2e5a8b 0%,#1a355c 100%);" onclick="editSpell(this)">Edit</button>
+        <button class="btn-delete" onclick="removeSpell(this)">Remove</button>
     `;
     document.getElementById('spellsList').appendChild(card);
     document.getElementById('spellName').value = '';
@@ -1340,6 +1352,31 @@ document.getElementById('debuffsList').appendChild(tag);
     document.getElementById('spellLevel').value = '';
     saveCharacter();
 }
+
+    
+function editSpell(button) {
+    const card = button.closest('.card');
+
+    document.getElementById('spellName').value = card.dataset.name || '';
+    document.getElementById('spellType').value = card.dataset.type || 'Cantrip';
+    document.getElementById('spellLevel').value = card.dataset.level || '';
+    document.getElementById('spellDesc').value = card.dataset.desc || '';
+
+    toggleSpellLevel();
+
+    card.remove();
+    saveCharacter();
+
+    document.getElementById('spellName').focus();
+}
+
+function removeSpell(button) {
+    if (!confirm('Delete this spell or ability?')) return;
+
+    button.closest('.card').remove();
+    saveCharacter();
+}
+
 
     window.addEventListener('DOMContentLoaded', loadCharacter);
     document.addEventListener('input', saveCharacter);
