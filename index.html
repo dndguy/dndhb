@@ -650,19 +650,19 @@
             <div class="grid-stats">
                 <div class="input-group">
                     <label>Level</label>
-                    <input type="text" placeholder="e.g. 1">
+                    <input id="charLevel" type="text" placeholder="e.g. 1">
                 </div>
                 <div class="input-group">
                     <label>Class</label>
-                    <input type="text" placeholder="e.g. Fighter">
+                    <input id="charClass" type="text" placeholder="e.g. Fighter">
                 </div>
                 <div class="input-group">
                     <label>Race</label>
-                    <input type="text" placeholder="e.g. Dwarf">
+                    <input id="charRace" type="text" placeholder="e.g. Dwarf">
                 </div>
                 <div class="input-group">
                     <label>Alignment</label>
-                    <input type="text" placeholder="e.g. Neutral Good">
+                    <input id="charAlignment" type="text" placeholder="e.g. Neutral Good">
                 </div>
             </div>
 
@@ -804,8 +804,6 @@
 
 <script>
 
-    element.textContent = name;
-
     function saveCharacter() {
     const data = getCharacterData();
     localStorage.setItem(
@@ -830,13 +828,10 @@
         document.getElementById('characterDescription').value =
             data.description || '';
 
-        const statInputs =
-            document.querySelectorAll('#Stats .grid-stats input');
-
-        if (statInputs[0]) statInputs[0].value = data.basicInfo?.Level || '';
-        if (statInputs[1]) statInputs[1].value = data.basicInfo?.class || '';
-        if (statInputs[2]) statInputs[2].value = data.basicInfo?.race || '';
-        if (statInputs[3]) statInputs[3].value = data.basicInfo?.alignment || '';
+        document.getElementById('charLevel').value = data.basicInfo?.Level || '';
+        document.getElementById('charClass').value = data.basicInfo?.class || '';
+        document.getElementById('charRace').value = data.basicInfo?.race || '';
+        document.getElementById('charAlignment').value = data.basicInfo?.alignment || '';
 
         document.getElementById('currentHp').value =
             data.hp?.current || '';
@@ -886,11 +881,10 @@
             document.getElementById('characterDescription').value =
                 data.description || '';
 
-            const statInputs = document.querySelectorAll('#Stats .grid-stats input');
-            if (statInputs[0]) statInputs[0].value = data.basicInfo?.Level || '';
-            if (statInputs[1]) statInputs[1].value = data.basicInfo?.class || '';
-            if (statInputs[2]) statInputs[2].value = data.basicInfo?.race || '';
-            if (statInputs[3]) statInputs[3].value = data.basicInfo?.alignment || '';
+            document.getElementById('charLevel').value = data.basicInfo?.Level || '';
+            document.getElementById('charClass').value = data.basicInfo?.class || '';
+            document.getElementById('charRace').value = data.basicInfo?.race || '';
+            document.getElementById('charAlignment').value = data.basicInfo?.alignment || '';
 
             document.getElementById('currentHp').value = data.hp?.current || '';
             document.getElementById('maxHp').value = data.hp?.max || '';
@@ -913,6 +907,7 @@
             });
 
             recalcCW();
+            saveCharacter();
         } catch (err) {
             alert('Invalid JSON file.');
             console.error(err);
@@ -983,10 +978,11 @@
         const roundEl = tag.querySelector('.round-val');
         const removeBtn = tag.querySelector('.btn-remove-debuff');
 
-        let name = tag.childNodes[0]?.textContent?.trim() || '';
-        if (!name && removeBtn) {
-            name = tag.textContent.replace(removeBtn.textContent, '').trim();
-        }
+        let name = tag.dataset.name || '';
+
+    if (!name && removeBtn) {
+    name = tag.textContent.replace(removeBtn.textContent, '').trim();
+}
 
         debuffs.push({
             name,
@@ -1040,10 +1036,10 @@
         description: document.getElementById('characterDescription')?.value || '',
 
         basicInfo: {
-            Level: document.querySelectorAll('#Stats .grid-stats input')[0]?.value || '',
-            class: document.querySelectorAll('#Stats .grid-stats input')[1]?.value || '',
-            race: document.querySelectorAll('#Stats .grid-stats input')[2]?.value || '',
-            alignment: document.querySelectorAll('#Stats .grid-stats input')[3]?.value || ''
+            Level: document.getElementById('charLevel')?.value || '',
+            class: document.getElementById('charClass')?.value || '',
+            race: document.getElementById('charRace')?.value || '',
+            alignment: document.getElementById('charAlignment')?.value || ''
         },
         hp: {
             current: document.getElementById('currentHp')?.value || '',
@@ -1075,6 +1071,7 @@
 function addDebuffFromData(name, tb) {
     const tag = document.createElement('div');
     tag.className = 'debuff-tag';
+    tag.dataset.name = name;
 
     let counterHtml = '';
     if (tb !== null && tb !== undefined && tb !== '') {
@@ -1086,8 +1083,13 @@ function addDebuffFromData(name, tb) {
             </div>`;
     }
 
-    tag.innerHTML = `${name || ''}${counterHtml}
-        <button class="btn-remove-debuff" onclick="this.parentElement.remove()" saveCharacter(); title="Remove">×</button>`;
+    tag.innerHTML = `
+    ${name}
+    ${counterHtml}
+    <button class="btn-remove-debuff"
+        onclick="this.parentElement.remove(); saveCharacter();"
+        title="Remove">×</button>
+`;
 
     document.getElementById('debuffsList').appendChild(tag);
 }
@@ -1104,24 +1106,22 @@ function addItemFromData(name, qty, cw, desc) {
         <h4>${name || ''} <span style="font-weight:normal;font-size:12px;">(×${qty || 1})</span></h4>
         ${desc ? `<p>${desc}</p>` : ''}
         <p class="card-meta">CW: ${cw || 0} lbs each — Total: ${totalItemCW} lbs</p>
-        <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
+        <button class="btn-delete" onclick="removeItem(this); saveCharacter();">Remove</button>`;
 
     document.getElementById('inventoryList').appendChild(card);
 }
 
 function addSpellFromData(name, type, level, desc) {
     const levelTag = (type === 'Spell (Leveled)' && level) ? ` — Level ${level}` : '';
-    saveCharacter();
-
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
         <h4>${name || ''} <em style="font-weight:normal;font-size:12px;">[${type || 'Ability'}${levelTag}]</em></h4>
         ${desc ? `<p>${desc}</p>` : ''}
-        <button class="btn-delete" onclick="this.closest('.card').remove()">Remove</button>`;
-        saveCharacter();
+        <button class="btn-delete" onclick="this.closest('.card').remove(); saveCharacter();">Remove</button>`;
 
     document.getElementById('spellsList').appendChild(card);
+     saveCharacter();
 }
 
     // ── Tab Switching ──
@@ -1168,23 +1168,35 @@ function addSpellFromData(name, type, level, desc) {
 
         const tag = document.createElement('div');
         tag.className = 'debuff-tag';
+        tag.dataset.name = name;
 
-        let counterHtml = '';
-        if (rounds !== '') {
-            counterHtml = `
-                <div class="debuff-counter">
-                    <button onclick="updateRounds(this, -1)" title="Decrease TB">−</button>
-                    <span class="round-val">${rounds}</span>
-                    <button onclick="updateRounds(this, 1)" title="Increase TB">+</button>
-                </div>`;
-        }
+      let counterHtml = '';
 
-        tag.innerHTML = `${name}${counterHtml}
-            <button class="btn-remove-debuff" onclick="this.parentElement.remove()" title="Remove">×</button>`;
+if (rounds !== '') {
+    counterHtml = `
+        <div class="debuff-counter">
+            <button onclick="updateRounds(this, -1)" title="Decrease TB">−</button>
+            <span class="round-val">${rounds}</span>
+            <button onclick="updateRounds(this, 1)" title="Increase TB">+</button>
+        </div>
+    `;
+}
 
-        document.getElementById('debuffsList').appendChild(tag);
+tag.innerHTML = `
+    ${name}
+    ${counterHtml}
+    <button
+        class="btn-remove-debuff"
+        onclick="this.parentElement.remove(); saveCharacter();"
+        title="Remove">
+        ×
+    </button>
+`;
+
+document.getElementById('debuffsList').appendChild(tag);
         document.getElementById('debuffName').value  = '';
         document.getElementById('debuffRounds').value = '';
+        saveCharacter();
     }
 
     // ── Attribute Logic ──
@@ -1199,7 +1211,7 @@ function addSpellFromData(name, type, level, desc) {
             <input type="text" class="attr-name-edit" value="${name}">
             <input type="text" class="attr-val-edit"  value="${value}">
             <button class="btn-delete-small"
-                onclick="if(confirm('Remove this attribute from the scroll?')) this.parentElement.remove();"saveCharacter();
+                onclick="if(confirm('Remove this attribute from the scroll?')) this.parentElement.remove(); saveCharacter()"
                 title="Remove">×</button>`;
 
         document.getElementById('attributesList').appendChild(card);
@@ -1252,16 +1264,15 @@ function addSpellFromData(name, type, level, desc) {
             <h4>${name} <span style="font-weight:normal;font-size:12px;">(×${qty})</span></h4>
             ${desc ? `<p>${desc}</p>` : ''}
             <p class="card-meta">CW: ${cw} lbs each — Total: ${totalItemCW} lbs</p>
-            <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
+            <button class="btn-delete" onclick="removeItem(this); saveCharacter();">Remove</button>`;
 
         document.getElementById('inventoryList').appendChild(card);
-        recalcCW();
+        recalcCW(); saveCharacter();
 
         document.getElementById('itemName').value = '';
         document.getElementById('itemQty').value  = '1';
         document.getElementById('itemCW').value   = '';
         document.getElementById('itemDesc').value = '';
-        saveCharacter();
     }
 
     function removeItem(button) {
@@ -1296,7 +1307,7 @@ function addSpellFromData(name, type, level, desc) {
     card.innerHTML = `
         <h4>${name} <em style="font-weight:normal;font-size:12px;">[${type}${levelTag}]</em></h4>
         ${desc ? `<p>${desc}</p>` : ''}
-        <button class="btn-delete" onclick="this.closest('.card').remove()">Remove</button>
+        <button class="btn-delete" onclick="this.closest('.card').remove(); saveCharacter();">Remove</button>
     `;
     document.getElementById('spellsList').appendChild(card);
     document.getElementById('spellName').value = '';
