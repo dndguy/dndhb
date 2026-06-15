@@ -736,6 +736,32 @@
                 </div>
             </div>
 
+            <div class="cw-box" id="xpSection">
+                <div class="cw-header">
+                    <label>Experience Points</label>
+                    <div class="max-cw-group">
+                        <label>Hide XP</label>
+                        <input type="checkbox" id="hideXP" onchange="toggleXPSection()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Current XP</label>
+                        <input type="number" id="currentXP" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Target XP</label>
+                        <input type="number" id="targetXP" value="0">
+                    </div>
+                </div>
+                <div class="hp-controls">
+                    <button onclick="modifyXP(-1)">−</button>
+                    <input type="number" id="xpChange" value="100" min="1">
+                    <button class="btn-heal" onclick="modifyXP(1)">+</button>
+                </div>
+            </div>
+
+
           <h2>Health & Status</h2>
 <div class="form-row" style="margin-bottom: 10px;">
     <div class="hp-box" style="flex-grow: 0;">
@@ -918,6 +944,10 @@
 
         document.getElementById('maxCW').value =
             data.carryWeight?.max || '';
+        document.getElementById('currentXP').value = data.xp?.current || 0;
+        document.getElementById('targetXP').value = data.xp?.target || 0;
+        document.getElementById('hideXP').checked = data.xp?.hidden || false;
+        toggleXPSection();
 
         (data.debuffs || []).forEach(d =>
             addDebuffFromData(d.name, d.tb)
@@ -966,6 +996,10 @@
             document.getElementById('currentHp').value = data.hp?.current || '';
             document.getElementById('maxHp').value = data.hp?.max || '';
             document.getElementById('maxCW').value = data.carryWeight?.max || '';
+            document.getElementById('currentXP').value = data.xp?.current || 0;
+            document.getElementById('targetXP').value = data.xp?.target || 0;
+            document.getElementById('hideXP').checked = data.xp?.hidden || false;
+            toggleXPSection();
 
             (data.debuffs || []).forEach(debuff => {
                 addDebuffFromData(debuff.name, debuff.tb);
@@ -1008,6 +1042,8 @@
     document.getElementById('currentHp').value = '';
     document.getElementById('maxHp').value = '';
     document.getElementById('maxCW').value = '';
+    document.getElementById('currentXP').value='0';
+    document.getElementById('targetXP').value='0';
 
     document.getElementById('attributesList').innerHTML = '';
     document.getElementById('debuffsList').innerHTML = '';
@@ -1128,6 +1164,11 @@
         },
         carryWeight: {
             max: document.getElementById('maxCW')?.value || ''
+        },
+        xp: {
+            current: document.getElementById('currentXP')?.value || 0,
+            target: document.getElementById('targetXP')?.value || 0,
+            hidden: document.getElementById('hideXP')?.checked || false
         },
         debuffs,
         attributes,
@@ -1520,6 +1561,23 @@ function updateEquipment(){
             list.appendChild(div);
         }
     });
+}
+
+
+function modifyXP(multiplier){
+    const current=document.getElementById('currentXP');
+    const change=parseInt(document.getElementById('xpChange').value)||0;
+    current.value=(parseInt(current.value)||0)+(change*multiplier);
+    saveCharacter();
+}
+
+function toggleXPSection(){
+    const hidden=document.getElementById('hideXP').checked;
+    const section=document.getElementById('xpSection');
+    section.querySelectorAll('.form-row,.hp-controls').forEach(el=>{
+        el.style.display=hidden?'none':'';
+    });
+    saveCharacter();
 }
 
 window.addEventListener('DOMContentLoaded', ()=>{loadCharacter();updateEquipment();});
