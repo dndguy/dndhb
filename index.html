@@ -1077,7 +1077,8 @@
             qty: parseFloat(card.dataset.qty) || 1,
             cw: parseFloat(card.dataset.cw) || 0,
             desc,
-            equipable: card.dataset.equipable === 'true'
+            equipable: card.dataset.equipable === 'true',
+            equipped: card.dataset.equipped === 'true'
         });
     });
 
@@ -1211,7 +1212,8 @@ function addItemFromData(name, qty, cw, desc, equipable=false, equipped=false) {
         <input type="number" min="1" value="${qty || 1}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
         ${desc ? `<p>${desc}</p>` : ''}
         <p class="card-meta">CW: ${cw || 0} lbs each — Total: ${totalItemCW} lbs</p>
-        ${equipable ? `<button class="btn-delete" style="right:90px;background:linear-gradient(180deg,#2e6b3a 0%,#1a4020 100%);" onclick="toggleEquip(this)">${equipped ? 'Unequip':'Equip'}</button>` : ''}
+        ${equipable ? `<button class="btn-delete" style="right:170px;background:linear-gradient(180deg,#2e6b3a 0%,#1a4020 100%);" onclick="toggleEquip(this)">${equipped ? 'Unequip':'Equip'}</button>` : ''}
+        <button class="btn-delete" style="right:80px;background:linear-gradient(180deg,#2e5a8b 0%,#1a355c 100%);" onclick="editItem(this)">Edit</button>
         <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
 
     document.getElementById('inventoryList').appendChild(card);
@@ -1381,7 +1383,8 @@ document.getElementById('debuffsList').appendChild(tag);
             <input type="number" min="1" value="${qty}" style="width:70px;" oninput="updateItemQuantity(this)"></label></div>
             ${desc ? `<p>${desc}</p>` : ''}
             <p class="card-meta">CW: ${cw} lbs each — Total: ${totalItemCW} lbs</p>
-            ${equipable ? `<button class="btn-delete" style="right:90px;background:linear-gradient(180deg,#2e6b3a 0%,#1a4020 100%);" onclick="toggleEquip(this)">Equip</button>` : ''}
+            ${equipable ? `<button class="btn-delete" style="right:170px;background:linear-gradient(180deg,#2e6b3a 0%,#1a4020 100%);" onclick="toggleEquip(this)">Equip</button>` : ''}
+            <button class="btn-delete" style="right:80px;background:linear-gradient(180deg,#2e5a8b 0%,#1a355c 100%);" onclick="editItem(this)">Edit</button>
             <button class="btn-delete" onclick="removeItem(this)">Remove</button>`;
 
         document.getElementById('inventoryList').appendChild(card);
@@ -1394,7 +1397,35 @@ document.getElementById('debuffsList').appendChild(tag);
         document.getElementById('itemEquipable').checked = false;
     }
 
-    function removeItem(button) {
+    
+function editItem(button) {
+    const card = button.closest('.card');
+
+    document.getElementById('itemName').value =
+        card.querySelector('h4').childNodes[0].textContent.trim();
+
+    document.getElementById('itemQty').value =
+        card.dataset.qty || 1;
+
+    document.getElementById('itemCW').value =
+        card.dataset.cw || 0;
+
+    document.getElementById('itemDesc').value =
+        card.querySelector('p:not(.card-meta)')?.textContent || '';
+
+    document.getElementById('itemEquipable').checked =
+        card.dataset.equipable === 'true';
+
+    card.remove();
+
+    recalcCW();
+    updateEquipment();
+    saveCharacter();
+
+    document.getElementById('itemName').focus();
+}
+
+function removeItem(button) {
     if (!confirm('Delete this item from the backpack?')) return;
 
     button.closest('.card').remove();
