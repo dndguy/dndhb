@@ -699,6 +699,7 @@
             <button class="tab-link active" onclick="openTab(event, 'Stats')">Character Stats</button>
             <button class="tab-link" onclick="openTab(event, 'Inventory')">Inventory</button>
             <button class="tab-link" onclick="openTab(event, 'Spells')">Spells & Abilities</button>
+            <button class="tab-link" onclick="openTab(event, 'DiceRoller')">Dice Roller</button>
         </div>
 
         <!-- ══════ STATS TAB ══════ -->
@@ -899,6 +900,40 @@
             <h2>Known Spells & Abilities</h2>
             <div class="list-container" id="spellsList"></div>
         </div>
+
+        
+        <!-- ══════ DICE TAB ══════ -->
+        <div id="DiceRoller" class="tab-content">
+            <h2>Dice Roller</h2>
+            <div id="diceControls" class="grid-stats">
+                <div class="input-group"><label>D2</label><input type="number" id="d2Count" value="0" min="0"></div>
+                <div class="input-group"><label>D4</label><input type="number" id="d4Count" value="0" min="0"></div>
+                <div class="input-group"><label>D6</label><input type="number" id="d6Count" value="0" min="0"></div>
+                <div class="input-group"><label>D8</label><input type="number" id="d8Count" value="0" min="0"></div>
+                <div class="input-group"><label>D10</label><input type="number" id="d10Count" value="0" min="0"></div>
+                <div class="input-group"><label>D12</label><input type="number" id="d12Count" value="0" min="0"></div>
+                <div class="input-group"><label>D20</label><input type="number" id="d20Count" value="0" min="0"></div>
+                <div class="input-group"><label>D100</label><input type="number" id="d100Count" value="0" min="0"></div>
+            </div>
+
+
+            <div class="form-row" style="margin-top:15px;">
+                <div class="input-group" style="max-width:180px;">
+                    <label>Modifier (+ / -)</label>
+                    <input type="number" id="diceModifier" value="0" placeholder="e.g. 5 or -2">
+                </div>
+            </div>
+
+            <button class="btn-add" onclick="rollDice()">Roll</button>
+
+            <div id="diceAnimation" style="font-size:40px;text-align:center;margin:20px 0;color:var(--blood-red);font-family:Cinzel,serif;"></div>
+
+            <div class="card">
+                <h4>Results</h4>
+                <div id="diceResults">Roll some dice...</div>
+            </div>
+        </div>
+
 
         <div class="ornament" style="margin-top: 10px;">— ✦ ⚔ ✦ —</div>
 
@@ -1578,6 +1613,54 @@ function toggleXPSection(){
         el.style.display=hidden?'none':'';
     });
     saveCharacter();
+}
+
+
+function rollDice(){
+    const diceTypes=[2,4,6,8,10,12,20,100];
+    const anim=document.getElementById('diceAnimation');
+    const results=document.getElementById('diceResults');
+
+    let ticks=0;
+    anim.textContent='🎲';
+
+    const interval=setInterval(()=>{
+        anim.textContent='🎲 '+Math.floor(Math.random()*100+1);
+        ticks++;
+        if(ticks>15){
+            clearInterval(interval);
+
+            let total=0;
+            let output='';
+
+            diceTypes.forEach(sides=>{
+                const count=parseInt(document.getElementById('d'+sides+'Count').value)||0;
+                if(count>0){
+                    let rolls=[];
+                    for(let i=0;i<count;i++){
+                        const r=Math.floor(Math.random()*sides)+1;
+                        rolls.push(r);
+                        total+=r;
+                    }
+                    output+=`<p><strong>${count}d${sides}</strong>: ${rolls.join(', ')}</p>`;
+                }
+            });
+
+            const modifier=parseInt(document.getElementById('diceModifier')?.value)||0;
+            const finalTotal=total+modifier;
+
+            anim.textContent='Done!';
+
+            if(output){
+                const modText = modifier !== 0
+                    ? `<p><strong>Modifier:</strong> ${modifier > 0 ? '+' : ''}${modifier}</p>`
+                    : '';
+                results.innerHTML = output + modText + `<hr><strong>Total: ${total}</strong><br><strong>Final Total: ${finalTotal}</strong>`;
+            } else {
+                results.innerHTML = 'No dice selected.';
+            }
+        }
+    },100);
 }
 
 window.addEventListener('DOMContentLoaded', ()=>{loadCharacter();updateEquipment();});
