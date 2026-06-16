@@ -906,14 +906,14 @@
         <div id="DiceRoller" class="tab-content">
             <h2>Dice Roller</h2>
             <div id="diceControls" class="grid-stats">
-                <div class="input-group"><label>D2</label><input type="number" id="d2Count" value="0" min="0"></div>
-                <div class="input-group"><label>D4</label><input type="number" id="d4Count" value="0" min="0"></div>
-                <div class="input-group"><label>D6</label><input type="number" id="d6Count" value="0" min="0"></div>
-                <div class="input-group"><label>D8</label><input type="number" id="d8Count" value="0" min="0"></div>
-                <div class="input-group"><label>D10</label><input type="number" id="d10Count" value="0" min="0"></div>
-                <div class="input-group"><label>D12</label><input type="number" id="d12Count" value="0" min="0"></div>
-                <div class="input-group"><label>D20</label><input type="number" id="d20Count" value="0" min="0"></div>
-                <div class="input-group"><label>D100</label><input type="number" id="d100Count" value="0" min="0"></div>
+                <div class="input-group"><label>D2</label><input type="number" id="d2Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D4</label><input type="number" id="d4Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D6</label><input type="number" id="d6Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D8</label><input type="number" id="d8Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D10</label><input type="number" id="d10Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D12</label><input type="number" id="d12Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D20</label><input type="number" id="d20Count" value="0" class="dice-input" min="0"></div>
+                <div class="input-group"><label>D100</label><input type="number" id="d100Count" value="0" class="dice-input" min="0"></div>
             </div>
 
 
@@ -1721,6 +1721,20 @@ function fallbackCopyEmail(email) {
 
     alert('Support email has been copied to clipboard.');
 }
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.dice-input').forEach(input => {
+        input.addEventListener('focus', function() {
+            if (this.value === '0') this.value = '';
+        });
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') this.value = '0';
+        });
+    });
+});
 </script>
 
 </body>
